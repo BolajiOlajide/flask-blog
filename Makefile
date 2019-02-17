@@ -1,2 +1,6 @@
+start_dev:
+	export FLASK_APP=main.py && export FLASK_DEBUG=1 && flask run
+
+
 start:
-	export FLASK_APP=main.py && flask run
+	python main.py
