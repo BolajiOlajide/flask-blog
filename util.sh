@@ -6,7 +6,7 @@ set -eo pipefail
 function create_db {
 python << END
 import sys
-from main import db
+from app import db
 db.create_all()
 sys.exit(0)
 END
@@ -15,7 +15,7 @@ END
 function drop_db {
 python << END
 import sys
-from main import db
+from app import db
 db.drop_all()
 sys.exit(0)
 END

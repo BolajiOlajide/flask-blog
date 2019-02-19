@@ -2,4 +2,4 @@
 __pycache_/
 .DS_Store
 .env
-flaskBlog.db
+**/flaskBlog.db
