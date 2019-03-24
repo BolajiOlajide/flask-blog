@@ -1,24 +1,33 @@
+import os
+
 from flask import (
     render_template, flash, redirect, url_for, request, abort
 )
 from flask_login import (
     login_user, current_user, logout_user, login_required
 )
+from dotenv import load_dotenv
 
 from app import app, db, bcrypt
 from app.models import User, Post
 from app.forms import (
     RegistrationForm, LoginForm, UpdateAccountForm,
-    PostForm
+    PostForm, RequestResetForm, ResetPasswordForm
 )
-from app.utils import save_picture
+from app.utils import save_picture, send_reset_email
 
+
+dotenv_path = os.path.join(os.path.dirname(__file__), '.env')
+load_dotenv(dotenv_path)
 
 @app.route('/')
 @app.route('/home')
 def home():
+    PER_PAGE = os.getenv('PER_PAGE', 5)
     page = request.args.get('page', 1, type=int)
-    posts = Post.query.order_by(Post.date_posted.desc()).paginate(per_page=3, page=page)
+    posts = Post.query\
+        .order_by(Post.date_posted.desc())\
+        .paginate(per_page=int(PER_PAGE), page=page)
     return render_template('home.html', posts=posts)
 
 
@@ -163,9 +172,47 @@ def delete_post(post_id):
 
 @app.route('/user/<string:username>')
 def user_post(username):
+    PER_PAGE = os.getenv('PER_PAGE', 5)
     page = request.args.get('page', 1, type=int)
     user = User.query.filter_by(username=username).first_or_404()
     posts = Post.query.filter_by(author=user)\
         .order_by(Post.date_posted.desc())\
-        .paginate(per_page=3, page=page)
+        .paginate(per_page=int(PER_PAGE), page=page)
     return render_template('user_post.html', posts=posts, user=user)
+
+
+@app.route("/reset_password", methods=['GET', 'POST'])
+def reset_request():
+    if current_user.is_authenticated:
+        return redirect(url_for('home'))
+    form = RequestResetForm()
+    if form.validate_on_submit():
+        user = User.query.filter_by(email=form.email.data).first()
+        send_reset_email(user)
+        flash('An email has been sent with instructions to reset your password.', 'info')
+        return redirect(url_for('login'))
+    return render_template('reset_request.html', form=form, title='Reset Password')
+
+
+@app.route("/reset_token/<token>", methods=['GET', 'POST'])
+def reset_token(token):
+    if current_user.is_authenticated:
+        return redirect(url_for('home'))
+    user = User.verify_reset_token(token)
+    if not user:
+        flash('That is an invalid or expired token', 'warning')
+        return redirect(url_for('reset_request'))
+    if form.validate_on_submit():
+        hashed_pw = bcrypt.generate_password_hash(
+            form.password.data
+        ).decode('utf-8')
+        user.password = hashed_pw
+        db.session.commit()
+
+        flash(
+            'Your password has been updated! You are now able to log in',
+            'success'
+        )
+        return redirect(url_for('login'))
+    form = ResetPasswordForm()
+    return render_template('reset_token.html', form=form, title='Reset Password')
