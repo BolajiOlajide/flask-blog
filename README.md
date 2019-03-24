@@ -21,16 +21,20 @@ for [virtualenvwrapper](https://virtualenvwrapper.readthedocs.io/en/latest/). On
 pipenv install
 ```
 
-4. Create the DB with the command
+4. Make a copy of the `.env.example` and rename it to `.env`. Fill in the empty fields with your desired details.
+
+5. Create the DB with the command
 
 ```bash
 make create_db
 ```
 
-5. Start the application with the command
+6. You can seed your DB with the database dump found in the `sql` directory.
+
+7. Start the application with the command
 
 ```bash
 make start
 ```
 
-*N.B* If you're using an OS where the `make` command isn't recognized, you can peep in the `Makefile` and run the actual command there.
+*N.B* If you're using an OS where the `make` command isn't recognized (mostly windows users I think), you can peep in the `Makefile` and run the actual command there.
