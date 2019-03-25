@@ -1,23 +1,24 @@
 import secrets
 import os
 
-from flask import url_for
+from flask import url_for, current_app
 from flask_mail import Message
 from dotenv import load_dotenv
 from PIL import Image
 
-from app import app, mail
+from app import mail
 
 
 dotenv_path = os.path.join(os.path.dirname(__file__), '.env')
 load_dotenv(dotenv_path)
+
 
 def save_picture(form_picture):
     random_hex = secrets.token_hex(8)
     _, f_ext = os.path.splitext(form_picture.filename)
     picture_fn = random_hex + f_ext
     picture_path = os.path.join(
-        app.root_path, 'static/pictures/', picture_fn)
+        current_app.root_path, 'static/pictures/', picture_fn)
 
     output_size = (125, 125)
     i = Image.open(form_picture)
@@ -37,8 +38,9 @@ def send_reset_email(user):
     )
     msg.body = f'''
 To reset your password, visit the followimg link:
-{url_for('reset_token', token=token, _external=True)}
+{url_for('users.reset_token', token=token, _external=True)}
 
-If you did not make this request then simply ignore this email and no changes will be made.
+If you did not make this request then simply ignore \
+this email and no changes will be made.
     '''
     mail.send(msg)

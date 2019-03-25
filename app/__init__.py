@@ -1,35 +1,35 @@
-import os
-
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
 from flask_login import LoginManager
 from flask_mail import Mail
-from dotenv import load_dotenv
+
+from app.config import Config
 
 
-dotenv_path = os.path.join(os.path.dirname(__file__), '.env')
-load_dotenv(dotenv_path)
-
-app = Flask(__name__)
-# you can generate secrets in Python3 using the secrets module
-# secrets.token_hex(16)
-app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
-app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('SQLALCHEMY_DATABASE_URI')
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-
-db = SQLAlchemy(app)
-bcrypt = Bcrypt(app)
-login_manager = LoginManager(app)
-login_manager.login_view = 'login'
+db = SQLAlchemy()
+bcrypt = Bcrypt()
+login_manager = LoginManager()
+login_manager.login_view = 'users.login'
 login_manager.login_message_category = 'info'
+mail = Mail()
 
-app.config['MAIL_SERVER'] = 'smtp.googlemail.com'
-app.config['MAIL_PORT'] = 587
-app.config['MAIL_USE_TLS'] = True
-app.config['MAIL_USERNAME'] = os.getenv('EMAIL_USER')
-app.config['MAIL_PASSWORD'] = os.getenv('EMAIL_PASS')
 
-mail = Mail(app)
+def create_app(config_class=Config):
+    app = Flask(__name__)
+    app.config.from_object(Config)
 
-from app import routes  # noqa: #402
+    db.init_app(app)
+    mail.init_app(app)
+    login_manager.init_app(app)
+    bcrypt.init_app(app)
+
+    from app.users.routes import users  # noqa: E402
+    from app.posts.routes import posts  # noqa: E402
+    from app.common.routes import common  # noqa: E402
+
+    app.register_blueprint(users)
+    app.register_blueprint(posts)
+    app.register_blueprint(common)
+
+    return app
