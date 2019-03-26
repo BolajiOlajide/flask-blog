@@ -27,9 +27,11 @@ def create_app(config_class=Config):
     from app.users.routes import users  # noqa: E402
     from app.posts.routes import posts  # noqa: E402
     from app.common.routes import common  # noqa: E402
+    from app.errors.handlers import errors  # noqa: E402
 
     app.register_blueprint(users)
     app.register_blueprint(posts)
     app.register_blueprint(common)
+    app.register_blueprint(errors)
 
     return app
